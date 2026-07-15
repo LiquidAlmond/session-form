@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Session Link Helper</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="page">
+
+  <header class="page-header">
+    <div>
+      <h1>Session Link Helper</h1>
+      <p class="subtitle">Fill in the session details once, then open one pre-filled form per student.</p>
+    </div>
+    <button type="button" id="openSettingsBtn" class="btn">&#9881;</button>
+  </header>
+
+  <div id="connectionBanner" class="banner banner-warning" hidden>
+    <span>No Google Form connected yet.</span>
+    <button type="button" id="connectionBannerBtn" class="btn btn-small">Connect a form</button>
+  </div>
+
+  <div id="exportReminder" class="banner banner-warning" hidden>
+    <span id="exportReminderText"></span>
+    <button type="button" id="exportReminderBtn" class="btn btn-small">Export now</button>
+  </div>
+
+  <section class="card">
+    <h2>Session details</h2>
+    <div class="field-grid">
+      <label>
+        Therapy date
+        <input type="date" id="fieldDate" />
+      </label>
+      <label>
+        Start time
+        <input type="time" id="fieldStartTime" />
+      </label>
+      <label>
+        End time
+        <input type="time" id="fieldEndTime" />
+      </label>
+      <label>
+        Duration (minutes)
+        <input type="text" id="fieldDuration" disabled placeholder="—" />
+      </label>
+      <label>
+        Session type
+        <select id="fieldSessionType"></select>
+      </label>
+    </div>
+    <p id="sessionError" class="field-error" hidden></p>
+  </section>
+
+  <section class="card">
+    <h2>Students in this session</h2>
+    <p id="rosterEmptyMsg" class="muted" hidden>
+      No students yet — add some under &#9881; Settings &rarr; Roster.
+    </p>
+    <input type="text" id="studentFilter" class="student-filter" placeholder="Filter students…" hidden />
+    <div id="studentChecklist" class="checklist"></div>
+    <p class="muted"><span id="selectedCount">0</span> selected</p>
+    <button type="button" id="generateBtn" class="btn btn-primary">Generate links</button>
+  </section>
+
+  <section class="card" id="linksSection" hidden>
+    <h2>Open one form per student</h2>
+    <p class="muted">Click each link to open that student's form in a new tab. Clicked links are marked done.</p>
+    <ol id="linksList" class="links-list"></ol>
+  </section>
+
+  <!-- Settings modal -->
+  <div id="settingsOverlay" class="overlay" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+      <div class="modal-header">
+        <h2 id="settingsTitle">Settings</h2>
+        <button type="button" id="closeSettingsBtn" class="btn btn-small" aria-label="Close settings">&#10005;</button>
+      </div>
+
+      <div class="modal-tabs">
+        <button type="button" class="tab-btn active" data-tab="form">Form connection</button>
+        <button type="button" class="tab-btn" data-tab="roster">Roster</button>
+        <button type="button" class="tab-btn" data-tab="types">Session types</button>
+        <button type="button" class="tab-btn" data-tab="backup">Backup &amp; restore</button>
+      </div>
+
+      <div class="modal-body">
+
+        <div class="tab-panel" data-panel="form">
+          <p class="muted">
+            This page works with any Google Form that has these questions,
+            <strong>in this exact order</strong>:
+          </p>
+          <ol id="fieldOrderList" class="field-order-list"></ol>
+          <p class="muted">
+            Fill your form out once with sample answers, use the form's
+            <strong>&#8942; menu &rarr; Get pre-filled link</strong>, then paste that link below.
+          </p>
+
+          <p id="connectionStatus" class="muted"></p>
+
+          <label class="stack-label">
+            Pre-filled link
+            <textarea id="prefilledLinkInput" rows="3" placeholder="https://docs.google.com/forms/d/e/.../viewform?usp=pp_url&entry.111=...&entry.222=..."></textarea>
+          </label>
+          <div class="add-row">
+            <button type="button" id="parseLinkBtn" class="btn">Parse link</button>
+            <button type="button" id="testLinkBtn" class="btn" hidden>Send test link</button>
+            <button type="button" id="disconnectFormBtn" class="btn" hidden>Disconnect form</button>
+          </div>
+
+          <p id="parseError" class="field-error" hidden></p>
+
+          <div id="parsePreview" hidden>
+            <p class="muted">Detected fields — check that these line up correctly:</p>
+            <table class="preview-table">
+              <thead><tr><th>Field</th><th>Entry ID</th><th>Sample value</th></tr></thead>
+              <tbody id="previewTableBody"></tbody>
+            </table>
+            <button type="button" id="saveConnectionBtn" class="btn btn-primary">Save connection</button>
+          </div>
+        </div>
+
+        <div class="tab-panel" data-panel="roster" hidden>
+          <div class="add-row">
+            <input type="text" id="newStudentName" placeholder="Student name" />
+            <button type="button" id="addStudentBtn" class="btn">Add</button>
+          </div>
+          <ul id="rosterList" class="manage-list"></ul>
+        </div>
+
+        <div class="tab-panel" data-panel="types" hidden>
+          <div class="add-row">
+            <input type="text" id="newSessionType" placeholder="Session type" />
+            <button type="button" id="addSessionTypeBtn" class="btn">Add</button>
+          </div>
+          <ul id="sessionTypeList" class="manage-list"></ul>
+        </div>
+
+        <div class="tab-panel" data-panel="backup" hidden>
+          <p class="muted">
+            Roster, session types, and your form connection are saved in this
+            browser only. Export a backup to move them to another device or
+            recover them if this browser's data is cleared.
+          </p>
+          <p class="muted">
+            Last changed: <span id="lastChangedText">never</span><br />
+            Last exported: <span id="lastExportedText">never</span>
+          </p>
+          <div class="add-row">
+            <button type="button" id="exportBtn" class="btn">Export settings</button>
+            <label class="btn btn-file">
+              Import settings
+              <input type="file" id="importFile" accept="application/json" hidden />
+            </label>
+          </div>
+          <p class="muted">Importing replaces your current roster, session types, and form connection.</p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
