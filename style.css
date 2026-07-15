@@ -33,6 +33,7 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  overflow-wrap: anywhere;
 }
 
 .page {
@@ -98,6 +99,7 @@ input, select {
   border: 1px solid var(--border);
   background: var(--bg);
   color: var(--text);
+  max-width: 100%;
 }
 
 .field-error {
@@ -352,6 +354,7 @@ textarea {
   background: var(--bg);
   color: var(--text);
   resize: vertical;
+  width: 100%;
 }
 
 .field-order-list {
@@ -375,4 +378,39 @@ textarea {
 
 footer {
   margin-top: 32px;
+}
+
+@media (max-width: 480px) {
+  .page {
+    padding: 16px 12px 48px;
+  }
+
+  .card {
+    padding: 14px 14px;
+  }
+
+  .field-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .overlay {
+    padding: 8px;
+  }
+
+  .modal-header {
+    padding: 12px 14px;
+  }
+
+  .modal-body {
+    padding: 12px 14px 16px;
+  }
+
+  .preview-table {
+    font-size: 0.78rem;
+  }
+
+  .preview-table th,
+  .preview-table td {
+    padding: 5px 4px;
+  }
 }
